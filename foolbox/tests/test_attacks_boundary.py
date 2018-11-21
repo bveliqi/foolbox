@@ -6,8 +6,9 @@ from foolbox.attacks import DeepFoolAttack
 from foolbox.attacks import BlendedUniformNoiseAttack
 
 
-def test_attack(bn_adversarial):
-    adv = bn_adversarial
+#def test_attack(bn_adversarial):
+def test_attack(bn_adversarial_batch):
+    adv = bn_adversarial_batch
     attack = BoundaryAttack()
     attack(adv, iterations=200, verbose=True)
     assert adv.image is not None

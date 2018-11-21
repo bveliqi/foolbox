@@ -7,6 +7,8 @@ from .saltandpepper import SaltAndPepperNoiseAttack
 from .. import rng
 
 
+# TODO: this won't work anymore, because it uses SnP as base which accepts batches only atm.
+
 class PointwiseAttack(Attack):
     """Starts with an adversarial and performs a binary search between
     the adversarial and the original for each dimension of the input

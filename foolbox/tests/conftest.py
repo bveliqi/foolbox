@@ -234,6 +234,17 @@ def bn_adversarial():
 
 
 @pytest.fixture
+def bn_adversarial_batch():
+    criterion = bn_criterion()
+    images = np.stack([bn_image() for _ in range(10)])
+    labels = [bn_label() for _ in range(10)]
+
+    cm_model = contextmanager(bn_model)
+    with cm_model() as model:
+        yield Adversarial(model, criterion, images, labels)
+
+
+@pytest.fixture
 def bn_adversarial_linf():
     criterion = bn_criterion()
     image = bn_image()
@@ -278,6 +289,16 @@ def gl_bn_adversarial():
     with cm_model() as model:
         yield Adversarial(model, criterion, image, label)
 
+@pytest.fixture
+def gl_bn_adversarial_batch():
+    criterion = bn_criterion()
+    images = np.stack([bn_image() for _ in range(10)])
+    labels = [bn_label() for _ in range(10)]
+
+    cm_model = contextmanager(gl_bn_model)
+    with cm_model() as model:
+        yield Adversarial(model, criterion, images, labels)
+
 
 @pytest.fixture(params=[CoordinateWiseGradientEstimator,
                         EvolutionaryStrategiesGradientEstimator])
@@ -302,6 +323,17 @@ def bn_impossible():
     cm_model = contextmanager(bn_model)
     with cm_model() as model:
         yield Adversarial(model, criterion, image, label)
+
+
+@pytest.fixture
+def bn_impossible_batch():
+    criterion = bn_impossible_criterion()
+    images = np.stack([bn_image() for _ in range(10)])
+    labels = [bn_label() for _ in range(10)]
+
+    cm_model = contextmanager(bn_model)
+    with cm_model() as model:
+        yield Adversarial(model, criterion, images, labels)
 
 
 @pytest.fixture

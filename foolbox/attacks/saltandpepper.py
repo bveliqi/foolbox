@@ -70,8 +70,8 @@ class SaltAndPepperNoiseAttack(Attack):
                 if a.normalized_distance(perturbed) >= a.distance:
                     continue
 
-                _, is_adversarial = a.predictions(perturbed)
-                if is_adversarial:
+                _, is_adversarial = a.batch_predictions(perturbed)
+                if np.all(is_adversarial):
                     # higher epsilon usually means larger perturbation, but
                     # this relationship is not strictly monotonic, so we set
                     # the new limit a bit higher than the best one so far

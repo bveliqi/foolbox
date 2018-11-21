@@ -61,10 +61,10 @@ class Adversarial(object):
 
         self.__model = model
         self.__criterion = criterion
-        self.__original_image = original_image
-        self.__original_image_for_distance = original_image
-        self.__original_class = original_class
-        self.__distance = distance
+        self.__original_image = original_image # todo: rename to image_s_
+        self.__original_image_for_distance = original_image # todo: rename to image_s_
+        self.__original_class = original_class # todo: original_class_es_
+        self.__distance = distance # todo: distance_s_, array
 
         if threshold is not None and not isinstance(threshold, Distance):
             threshold = distance(value=threshold)
@@ -72,19 +72,20 @@ class Adversarial(object):
 
         self.verbose = verbose
 
-        self.__best_adversarial = None
-        self.__best_distance = distance(value=np.inf)
-        self.__best_adversarial_output = None
+        self.__best_adversarial = None # todo: plural, array
+        self.__best_distance = distance(value=np.inf) # todo: plural, array
+        self.__best_adversarial_output = None # todo: plural, array
 
-        self._total_prediction_calls = 0
-        self._total_gradient_calls = 0
+        self._total_prediction_calls = 0 # todo: total? per image? avg?
+        self._total_gradient_calls = 0 # todo: total? per image? avg?
 
         self._best_prediction_calls = 0
         self._best_gradient_calls = 0
 
         # check if the original image is already adversarial
         try:
-            self.predictions(original_image)
+            # self.predictions(original_image)
+            pass
         except StopAttack:
             # if a threshold is specified and the original input is
             # misclassified, this can already cause a StopAttack
@@ -209,7 +210,7 @@ class Adversarial(object):
             return True, distance
         return False, distance
 
-    def __is_adversarial(self, image, predictions, in_bounds):
+    def __is_adversarial(self, image, predictions, in_bounds, i):
         """Interface to criterion.is_adverarial that calls
         __new_adversarial if necessary.
 
@@ -222,7 +223,7 @@ class Adversarial(object):
 
         """
         is_adversarial = self.__criterion.is_adversarial(
-            predictions, self.__original_class)
+            predictions, self.__original_class[i])
         assert isinstance(is_adversarial, bool) or \
             isinstance(is_adversarial, np.bool_)
         if is_adversarial:
@@ -346,7 +347,7 @@ class Adversarial(object):
             else:
                 in_bounds_i = self.in_bounds(images[i])
             is_adversarial, is_best, distance = self.__is_adversarial(
-                images[i], predictions[i], in_bounds_i)
+                images[i], predictions[i], in_bounds_i, i)
             if is_adversarial and greedy:
                 if return_details:
                     return predictions, is_adversarial, i, is_best, distance

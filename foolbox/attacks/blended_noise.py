@@ -60,8 +60,8 @@ class BlendedUniformNoiseAttack(Attack):
             # is that one
             random_image = nprng.uniform(
                 min_, max_, size=image.shape).astype(image.dtype)
-            _, is_adversarial = a.predictions(random_image)
-            if is_adversarial:
+            _, is_adversarial = a.batch_predictions(random_image)
+            if np.all(is_adversarial):
                 logging.info('Found adversarial image after {} '
                              'attempts'.format(j + 1))
                 break
@@ -80,6 +80,6 @@ class BlendedUniformNoiseAttack(Attack):
             if not a.in_bounds(perturbed):  # pragma: no cover
                 np.clip(perturbed, min_, max_, out=perturbed)
 
-            _, is_adversarial = a.predictions(perturbed)
-            if is_adversarial:
+            _, is_adversarial = a.batch_predictions(perturbed)
+            if np.all(is_adversarial):
                 return

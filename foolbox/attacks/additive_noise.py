@@ -41,7 +41,7 @@ class AdditiveNoiseAttack(Attack):
         del label
         del unpack
 
-        image = a.original_image
+        images = a.original_image
         bounds = a.bounds()
         min_, max_ = bounds
 
@@ -49,12 +49,16 @@ class AdditiveNoiseAttack(Attack):
             epsilons = np.linspace(0, 1, num=epsilons + 1)[1:]
 
         for epsilon in epsilons:
-            noise = self._sample_noise(epsilon, image, bounds)
-            perturbed = image + epsilon * noise
-            perturbed = np.clip(perturbed, min_, max_)
+            perturbations = list()
+            for i, image in enumerate(images):
+                noise = self._sample_noise(epsilon, image, bounds)
+                perturbed = image + epsilon * noise
+                perturbed = np.clip(perturbed, min_, max_)
+                perturbations.append(perturbed)
 
-            _, is_adversarial = a.predictions(perturbed)
-            if is_adversarial:
+            perturbations = np.stack(perturbations)
+            _, is_adversarial = a.batch_predictions(perturbations)
+            if np.all(is_adversarial):
                 return
 
     @abstractmethod

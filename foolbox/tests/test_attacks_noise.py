@@ -15,8 +15,8 @@ Attacks = [
 
 
 @pytest.mark.parametrize('Attack', Attacks)
-def test_attack(Attack, bn_adversarial):
-    adv = bn_adversarial
+def test_attack(Attack, bn_adversarial_batch):
+    adv = bn_adversarial_batch
     attack = Attack()
     attack(adv)
     assert adv.image is not None
@@ -24,8 +24,8 @@ def test_attack(Attack, bn_adversarial):
 
 
 @pytest.mark.parametrize('Attack', Attacks)
-def test_attack_gl(Attack, gl_bn_adversarial):
-    adv = gl_bn_adversarial
+def test_attack_gl(Attack, gl_bn_adversarial_batch):
+    adv = gl_bn_adversarial_batch
     attack = Attack()
     attack(adv)
     assert adv.image is not None
@@ -33,8 +33,8 @@ def test_attack_gl(Attack, gl_bn_adversarial):
 
 
 @pytest.mark.parametrize('Attack', Attacks)
-def test_attack_impossible(Attack, bn_impossible):
-    adv = bn_impossible
+def test_attack_impossible(Attack, bn_impossible_batch):
+    adv = bn_impossible_batch
     attack = Attack()
     attack(adv)
     assert adv.image is None
