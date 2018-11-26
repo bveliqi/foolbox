@@ -27,19 +27,24 @@ class PrecomputedImagesAttack(Attack):
         self._input_images = input_images
         self._output_images = output_images
 
-    def _get_output(self, a, image):
+    def _get_output(self, a, images):
         """ Looks up the precomputed adversarial image for a given image.
 
         """
-        sd = np.square(self._input_images - image)
-        mses = np.mean(sd, axis=tuple(range(1, sd.ndim)))
-        index = np.argmin(mses)
 
-        # if we run into numerical problems with this approach, we might
-        # need to add a very tiny threshold here
-        if mses[index] > 0:
-            raise ValueError('No precomputed output image for this image')
-        return self._output_images[index]
+        adversarials = list()
+        for image in images:
+            sd = np.square(self._input_images - image)
+            mses = np.mean(sd, axis=tuple(range(1, sd.ndim)))
+            index = np.argmin(mses)
+
+            # if we run into numerical problems with this approach, we might
+            # need to add a very tiny threshold here
+            if mses[index] > 0:
+                raise ValueError('No precomputed output image for this image')
+            adversarials.append(self._output_images[index])
+
+        return np.stack(adversarials)
 
     @call_decorator
     def __call__(self, input_or_adv, label=None, unpack=True):
@@ -65,6 +70,6 @@ class PrecomputedImagesAttack(Attack):
         del label
         del unpack
 
-        image = a.original_image
-        adversarial = self._get_output(a, image)
-        a.predictions(adversarial)
+        images = a.original_image
+        adversarials = self._get_output(a, images)
+        a.batch_predictions(adversarials)

@@ -4,11 +4,10 @@ import pytest
 from foolbox.attacks import PrecomputedImagesAttack as Attack
 
 
-def test_attack(bn_adversarial):
-    adv = bn_adversarial
+def test_attack(bn_adversarial_batch):
+    adv = bn_adversarial_batch
 
-    image = adv.original_image
-    input_images = image[np.newaxis]
+    input_images = adv.original_image
     output_images = np.zeros_like(input_images)
 
     attack = Attack(input_images, output_images)
@@ -19,11 +18,11 @@ def test_attack(bn_adversarial):
     assert adv.distance.value < np.inf
 
 
-def test_unknown_image(bn_adversarial):
-    adv = bn_adversarial
+def test_unknown_image(bn_adversarial_batch):
+    adv = bn_adversarial_batch
 
-    image = adv.original_image
-    input_images = np.zeros_like(image[np.newaxis])
+    images = adv.original_image
+    input_images = np.zeros_like(images)
     output_images = np.zeros_like(input_images)
 
     attack = Attack(input_images, output_images)
