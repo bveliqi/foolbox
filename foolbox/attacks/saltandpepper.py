@@ -42,11 +42,13 @@ class SaltAndPepperNoiseAttack(Attack):
         del label
         del unpack
 
-        image = a.original_image
+        # TODO: this doesn't see to be right - image is now a batch?!
+        images = a.original_image
         min_, max_ = a.bounds()
         axis = a.channel_axis(batch=False)
-        channels = image.shape[axis]
-        shape = list(image.shape)
+        sample = images[0]
+        channels = sample.shape[axis]
+        shape = list(sample.shape)
         shape[axis] = 1
         r = max_ - min_
         pixels = np.prod(shape)
@@ -56,21 +58,26 @@ class SaltAndPepperNoiseAttack(Attack):
 
         for _ in range(repetitions):
             for epsilon in np.linspace(0, max_epsilon, num=epsilons + 1)[1:]:
-                p = epsilon
+                perturbations = list()
+                for image in images:
+                    p = epsilon
 
-                u = nprng.uniform(size=shape)
-                u = u.repeat(channels, axis=axis)
+                    u = nprng.uniform(size=shape)
+                    u = u.repeat(channels, axis=axis)
 
-                salt = (u >= 1 - p / 2).astype(image.dtype) * r
-                pepper = -(u < p / 2).astype(image.dtype) * r
+                    salt = (u >= 1 - p / 2).astype(image.dtype) * r
+                    pepper = -(u < p / 2).astype(image.dtype) * r
 
-                perturbed = image + salt + pepper
-                perturbed = np.clip(perturbed, min_, max_)
+                    perturbed = image + salt + pepper
+                    perturbed = np.clip(perturbed, min_, max_)
 
-                if a.normalized_distance(perturbed) >= a.distance:
-                    continue
+                    perturbations.append(perturbed)
 
-                _, is_adversarial = a.batch_predictions(perturbed)
+                    if a.normalized_distance(perturbed) >= a.distance:
+                        continue
+
+                perturbations = np.stack(perturbations)
+                _, is_adversarial = a.batch_predictions(perturbations)
                 if np.all(is_adversarial):
                     # higher epsilon usually means larger perturbation, but
                     # this relationship is not strictly monotonic, so we set
