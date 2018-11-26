@@ -3,8 +3,8 @@ import numpy as np
 from foolbox.attacks import GaussianBlurAttack as Attack
 
 
-def test_attack(bn_adversarial):
-    adv = bn_adversarial
+def test_attack(bn_adversarial_batch):
+    adv = bn_adversarial_batch
     attack = Attack()
     attack(adv)
     assert adv.image is None
@@ -12,8 +12,8 @@ def test_attack(bn_adversarial):
     # BlurAttack will fail for brightness model
 
 
-def test_attack_gl(gl_bn_adversarial):
-    adv = gl_bn_adversarial
+def test_attack_gl(gl_bn_adversarial_batch):
+    adv = gl_bn_adversarial_batch
     attack = Attack()
     attack(adv)
     assert adv.image is None
@@ -21,8 +21,8 @@ def test_attack_gl(gl_bn_adversarial):
     # BlurAttack will fail for brightness model
 
 
-def test_attack_trivial(bn_trivial):
-    adv = bn_trivial
+def test_attack_trivial(bn_trivial_batch):
+    adv = bn_trivial_batch
     attack = Attack()
     attack(adv)
     assert adv.image is not None

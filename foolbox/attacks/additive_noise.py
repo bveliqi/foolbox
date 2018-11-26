@@ -50,7 +50,9 @@ class AdditiveNoiseAttack(Attack):
 
         for epsilon in epsilons:
             perturbations = list()
-            for i, image in enumerate(images):
+            # generation of random noise takes ~200 times more than prediction itself
+            # TODO: generate random pertubations in batches as well
+            for image in images:
                 noise = self._sample_noise(epsilon, image, bounds)
                 perturbed = image + epsilon * noise
                 perturbed = np.clip(perturbed, min_, max_)

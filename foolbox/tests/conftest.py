@@ -5,6 +5,7 @@
 # first import tensorflow, then pytorch and then
 # according to test order seems to solve it
 import tensorflow
+
 print(tensorflow.__version__)
 # import theano
 # print(theano.__version__)
@@ -13,10 +14,11 @@ print(tensorflow.__version__)
 # import keras
 # print(keras.__version__)
 import torch
+
 print(torch.__version__)
 
-
 import sys
+
 if sys.version_info > (3, 2):
     from unittest.mock import Mock
 else:
@@ -163,6 +165,7 @@ def eg_bn_model_factory(request):
             gradient_estimator = GradientEstimator(epsilon=0.01)
             model = ModelWithEstimatedGradients(model, gradient_estimator)
             yield model
+
     return eg_bn_model
 
 
@@ -289,6 +292,7 @@ def gl_bn_adversarial():
     with cm_model() as model:
         yield Adversarial(model, criterion, image, label)
 
+
 @pytest.fixture
 def gl_bn_adversarial_batch():
     criterion = bn_criterion()
@@ -353,6 +357,22 @@ def bn_trivial():
 
 
 @pytest.fixture
+def bn_trivial_batch():
+    criterion = bn_trivial_criterion()
+    images = np.stack([bn_image() for _ in range(10)])
+    labels = [bn_label() for _ in range(10)]
+
+    cm_model = contextmanager(bn_model)
+    with cm_model() as model:
+        adv = Adversarial(model, criterion, images, labels)
+        # the original should not yet be considered adversarial
+        # so that the attack implementation is actually called
+        adv._Adversarial__best_adversarial = None
+        adv._Adversarial__best_distance = MSE(value=np.inf)
+        yield adv
+
+
+@pytest.fixture
 def bn_adversarial_pytorch():
     model = bn_model_pytorch()
     criterion = bn_criterion()
@@ -400,6 +420,7 @@ def binarized_bn_model():
 
         def backward(x):
             return x
+
         return x, backward
 
     with tf.Session():
@@ -458,6 +479,7 @@ def binarized2_bn_model():
 
         def backward(x):
             return x
+
         return x, backward
 
     with tf.Session():
