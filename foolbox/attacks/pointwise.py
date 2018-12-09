@@ -1,5 +1,6 @@
 import warnings
 import logging
+import numpy as np
 
 from .base import Attack
 from .base import call_decorator
@@ -61,41 +62,45 @@ class PointwiseAttack(Attack):
                 ' point or targeted initialization attack.')
             return
 
-        shape = a.original_image.shape
-        N = a.original_image.size
+        sample = a.original_image[0]
+        shape = sample.shape
+        N = sample.size
 
-        original = a.original_image.reshape(-1)
-        x = a.image.copy().reshape(-1)
+        batch_size = a.original_image.shape[0]
+        originals = a.original_image.reshape(batch_size, -1)
+        pertubations = a.image.copy().reshape(batch_size, -1)
 
-        assert original.dtype == x.dtype
+        assert originals.dtype == pertubations.dtype
 
         while True:
             # draw random shuffling of all indices
             indices = list(range(N))
             rng.shuffle(indices)
 
-            for index in indices:
-                # change index
-                old_value = x[index]
-                new_value = original[index]
-                if old_value == new_value:
-                    continue
-                x[index] = new_value
+            for i, original in enumerate(originals):
+                pertubation = pertubations[i]
+                for index in indices:
+                    # change index
+                    old_value = pertubation[index]
+                    new_value = original[index]
+                    if old_value == new_value:
+                        continue
+                    pertubation[index] = new_value
 
-                # check if still adversarial
-                _, is_adversarial = a.predictions(x.reshape(shape))
+                    # check if still adversarial
+                    _, is_adversarial = a.predictions(pertubation.reshape(shape))
 
-                # if adversarial, restart from there
-                if is_adversarial:
-                    logging.info('Reset value to original -> new distance:'
-                                 ' {}'.format(a.distance))
+                    # if adversarial, restart from there
+                    if np.all(is_adversarial):
+                        logging.info('Reset value to original -> new distance:'
+                                     ' {}'.format(a.distance))
+                        break
+
+                    # if not, undo change
+                    pertubation[index] = old_value
+                else:
+                    # no index was succesful
                     break
-
-                # if not, undo change
-                x[index] = old_value
-            else:
-                # no index was succesful
-                break
 
         logging.info('Starting binary searches')
 
@@ -111,14 +116,14 @@ class PointwiseAttack(Attack):
 
             for index in indices:
                 # change index
-                old_value = x[index]
+                old_value = pertubation[index]
                 original_value = original[index]
                 if old_value == original_value:
                     continue
-                x[index] = original_value
+                pertubation[index] = original_value
 
                 # check if still adversarial
-                _, is_adversarial = a.predictions(x.reshape(shape))
+                _, is_adversarial = a.predictions(pertubation.reshape(shape))
 
                 # if adversarial, no binary search needed
                 if is_adversarial:  # pragma: no cover
@@ -131,10 +136,10 @@ class PointwiseAttack(Attack):
                     adv_value = old_value
                     non_adv_value = original_value
                     best_adv_value = self.binary_search(
-                        a, x, index, adv_value, non_adv_value, shape)
+                        a, pertubation, index, adv_value, non_adv_value, shape)
 
                     if old_value != best_adv_value:
-                        x[index] = best_adv_value
+                        pertubation[index] = best_adv_value
                         improved = True
                         logging.info('Set value at {} from {} to {}'
                                      ' (original has {}) ->'

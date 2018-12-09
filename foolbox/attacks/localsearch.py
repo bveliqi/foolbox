@@ -39,31 +39,36 @@ class SinglePixelAttack(Attack):
         del label
         del unpack
 
+        images = a.original_image
+        sample = images[0]
         channel_axis = a.channel_axis(batch=False)
-        image = a.original_image
-        axes = [i for i in range(image.ndim) if i != channel_axis]
+        axes = [i for i in range(sample.ndim) if i != channel_axis]
         assert len(axes) == 2
-        h = image.shape[axes[0]]
-        w = image.shape[axes[1]]
+        h = sample.shape[axes[0]]
+        w = sample.shape[axes[1]]
 
         min_, max_ = a.bounds()
 
         pixels = nprng.permutation(h * w)
         pixels = pixels[:max_pixels]
         for i, pixel in enumerate(pixels):
-            x = pixel % w
-            y = pixel // w
+            for image in images:
+                x = pixel % w
+                y = pixel // w
 
-            location = [x, y]
-            location.insert(channel_axis, slice(None))
-            location = tuple(location)
+                location = [x, y]
+                location.insert(channel_axis, slice(None))
+                location = tuple(location)
 
-            for value in [min_, max_]:
-                perturbed = image.copy()
-                perturbed[location] = value
+                pertubations = list()
+                for value in [min_, max_]:
+                    perturbed = image.copy()
+                    perturbed[location] = value
+                    pertubations.append(perturbed)
 
-                _, is_adv = a.predictions(perturbed)
-                if is_adv:
+                pertubations = np.stack(pertubations)
+                _, is_adv = a.batch_predictions(pertubations)
+                if np.all(is_adv):
                     return
 
 
